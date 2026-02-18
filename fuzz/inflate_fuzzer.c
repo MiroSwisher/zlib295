@@ -18,10 +18,10 @@
 #include "zlib.h"
 
 #define OUT_CHUNK 1024
-#define MAX_INPUT (1 * 1024 * 1024)
+#define FUZZ_MAX_INPUT (1 * 1024 * 1024)
 
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
-  if (size < 2 || size > MAX_INPUT)
+  if (size < 2 || size > FUZZ_MAX_INPUT)
     return 0;
 
   /* Use the first byte to select window bits. */
@@ -66,7 +66,8 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     strm.next_out  = out_buf;
     strm.avail_out = OUT_CHUNK;
     ret = inflate(&strm, flush);
-    if (ret == Z_STREAM_ERROR || ret == Z_MEM_ERROR)
+    /* Break on any error: Z_DATA_ERROR, Z_STREAM_ERROR, Z_MEM_ERROR, etc. */
+    if (ret < 0)
       break;
   } while (ret != Z_STREAM_END && strm.avail_in > 0);
 

@@ -19,11 +19,11 @@
 
 #include "zlib.h"
 
-#define MAX_INPUT (256 * 1024)
+#define FUZZ_MAX_INPUT (256 * 1024)
 
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   /* Need at least 4 bytes for parameters + 1 byte of payload. */
-  if (size < 5 || size > MAX_INPUT)
+  if (size < 5 || size > FUZZ_MAX_INPUT)
     return 0;
 
   /* Extract fuzz-driven compression parameters from the first 4 bytes. */

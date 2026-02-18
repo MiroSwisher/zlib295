@@ -45,32 +45,58 @@ if(APPLE)
   endif()
 endif()
 
-# Static zlib is required for fuzz targets (we link it into the fuzzer binary).
-if(NOT TARGET zlibstatic)
-  message(STATUS "libFuzzer skipped: zlib static library not built (enable ZLIB_BUILD_STATIC)")
+# Build a separate instrumented static zlib for fuzzing. This avoids tainting
+# the main zlibstatic with sanitizer flags (which would break non-fuzz targets).
+# We reuse the same source list but compile with coverage + sanitizer instrumentation.
+get_target_property(ZLIB_SRC_FILES zlibstatic SOURCES)
+if(NOT ZLIB_SRC_FILES)
+  message(STATUS "libFuzzer skipped: could not get zlib source list")
   return()
 endif()
 
+# Source paths are relative to zlib source dir; make them absolute.
+set(ZLIB_SRC_FILES_ABS "")
+foreach(src ${ZLIB_SRC_FILES})
+  if(IS_ABSOLUTE ${src})
+    list(APPEND ZLIB_SRC_FILES_ABS ${src})
+  else()
+    list(APPEND ZLIB_SRC_FILES_ABS ${zlib_SOURCE_DIR}/${src})
+  endif()
+endforeach()
+
+add_library(zlibstatic_fuzz STATIC ${ZLIB_SRC_FILES_ABS})
+target_include_directories(zlibstatic_fuzz PUBLIC
+  ${zlib_BINARY_DIR}
+  ${zlib_SOURCE_DIR})
+target_compile_definitions(zlibstatic_fuzz PRIVATE ZLIB_BUILD)
+# CRITICAL: -fsanitize=fuzzer-no-link adds SanCov instrumentation so the fuzzer
+# can see which code paths are hit inside zlib (not just the harness).
+target_compile_options(zlibstatic_fuzz PRIVATE
+  -fsanitize=fuzzer-no-link,address,undefined -g -O1 -fno-omit-frame-pointer ${FUZZ_EXTRA_COMPILE_OPTIONS})
+
 set(FUZZ_SANITIZERS "fuzzer,address,undefined")
 
-# compress_fuzzer: compress levels, decompress with custom headers
-add_executable(compress_fuzzer compress_fuzzer.c)
-target_link_libraries(compress_fuzzer PRIVATE zlibstatic)
-target_include_directories(compress_fuzzer PRIVATE
-  ${zlib_BINARY_DIR}
-  ${zlib_SOURCE_DIR})
-target_compile_options(compress_fuzzer PRIVATE -fsanitize=${FUZZ_SANITIZERS} -g -O1 ${FUZZ_EXTRA_COMPILE_OPTIONS})
-target_link_options(compress_fuzzer PRIVATE -fsanitize=${FUZZ_SANITIZERS} ${FUZZ_EXTRA_LINK_OPTIONS})
-set_target_properties(compress_fuzzer PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/fuzz)
+# Helper: add a fuzz target with standard options.
+function(add_fuzz_target name source)
+  add_executable(${name} ${source})
+  target_link_libraries(${name} PRIVATE zlibstatic_fuzz)
+  target_include_directories(${name} PRIVATE
+    ${zlib_BINARY_DIR}
+    ${zlib_SOURCE_DIR})
+  target_compile_options(${name} PRIVATE -fsanitize=${FUZZ_SANITIZERS} -g -O1 ${FUZZ_EXTRA_COMPILE_OPTIONS})
+  target_link_options(${name} PRIVATE -fsanitize=${FUZZ_SANITIZERS} ${FUZZ_EXTRA_LINK_OPTIONS})
+  set_target_properties(${name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/fuzz)
+endfunction()
 
-# uncompress_fuzzer: raw uncompress (decoder stress)
-add_executable(uncompress_fuzzer uncompress_fuzzer.c)
-target_link_libraries(uncompress_fuzzer PRIVATE zlibstatic)
-target_include_directories(uncompress_fuzzer PRIVATE
-  ${zlib_BINARY_DIR}
-  ${zlib_SOURCE_DIR})
-target_compile_options(uncompress_fuzzer PRIVATE -fsanitize=${FUZZ_SANITIZERS} -g -O1 ${FUZZ_EXTRA_COMPILE_OPTIONS})
-target_link_options(uncompress_fuzzer PRIVATE -fsanitize=${FUZZ_SANITIZERS} ${FUZZ_EXTRA_LINK_OPTIONS})
-set_target_properties(uncompress_fuzzer PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/fuzz)
+# --- Fuzz targets ---
+# compress_fuzzer:          compress at different levels, decompress with custom headers
+add_fuzz_target(compress_fuzzer            compress_fuzzer.c)
+# uncompress_fuzzer:        raw uncompress() decoder stress
+add_fuzz_target(uncompress_fuzzer          uncompress_fuzzer.c)
+# inflate_fuzzer:           streaming inflate with fuzz-driven window bits and flush modes
+add_fuzz_target(inflate_fuzzer             inflate_fuzzer.c)
+# deflate_roundtrip_fuzzer: deflate + inflate round-trip with varied parameters
+add_fuzz_target(deflate_roundtrip_fuzzer   deflate_roundtrip_fuzzer.c)
 
-message(STATUS "libFuzzer targets: compress_fuzzer, uncompress_fuzzer (output in build/fuzz/)")
+set(FUZZ_TARGETS compress_fuzzer uncompress_fuzzer inflate_fuzzer deflate_roundtrip_fuzzer)
+message(STATUS "libFuzzer targets: ${FUZZ_TARGETS} (output in build/fuzz/)")
