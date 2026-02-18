@@ -1,0 +1,44 @@
+# Fuzzer dictionary for zlib/gzip/deflate formats.
+# Magic bytes, common headers, and interesting values that help the fuzzer
+# construct valid-looking inputs faster.
+
+# zlib header bytes (CMF + FLG)
+"\x78\x01"  # zlib: deflate, level 1
+"\x78\x5e"  # zlib: deflate, default
+"\x78\x9c"  # zlib: deflate, default (most common)
+"\x78\xda"  # zlib: deflate, best compression
+"\x78\x20"  # zlib: deflate, level 0 (no compression)
+
+# gzip magic number
+"\x1f\x8b"  # gzip magic
+"\x1f\x8b\x08"  # gzip magic + deflate method
+"\x1f\x8b\x08\x00"  # gzip header with no flags
+
+# Deflate block types (first byte of a deflate block)
+"\x01"  # BFINAL=1, BTYPE=00 (stored, last block)
+"\x00"  # BFINAL=0, BTYPE=00 (stored, not last)
+"\x02"  # BFINAL=0, BTYPE=01 (static Huffman)
+"\x03"  # BFINAL=1, BTYPE=01 (static Huffman, last)
+"\x04"  # BFINAL=0, BTYPE=10 (dynamic Huffman)
+"\x05"  # BFINAL=1, BTYPE=10 (dynamic Huffman, last)
+
+# Common stored block header (LEN + NLEN for 0-byte stored block)
+"\x00\x00\xff\xff"  # LEN=0, NLEN=0xffff
+"\x01\x00\xfe\xff"  # LEN=1, NLEN=0xfffe
+
+# Adler-32 checksum patterns
+"\x00\x00\x00\x01"  # Adler-32 of empty string
+"\x00\x00\x00\xff"
+
+# CRC-32 patterns
+"\x00\x00\x00\x00"  # CRC-32 of empty
+"\xff\xff\xff\xff"
+
+# Interesting length/distance values for the inflate code table
+"\x00\x01"
+"\xff\x7f"
+"\xff\xff"
+
+# End-of-block code (256) in static Huffman is 0b0000000 (7 bits)
+"\x00"
+"\x03\x00"  # end-of-block marker in some deflate configs

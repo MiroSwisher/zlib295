@@ -22,6 +22,7 @@ set(CPACK_RESOURCE_FILE_README ${zlib_SOURCE_DIR}/README)
 option(ZLIB_BUILD_TESTING "Enable Zlib Examples as tests" ON)
 option(ZLIB_BUILD_SHARED "Enable building zlib shared library" ON)
 option(ZLIB_BUILD_STATIC "Enable building zlib static library" ON)
+option(ZLIB_BUILD_FUZZ "Enable libFuzzer fuzz targets (requires Clang)" OFF)
 option(ZLIB_INSTALL "Enable installation of zlib" ON)
 option(ZLIB_PREFIX "prefix for all types and library functions, see zconf.h.in"
        OFF)
@@ -306,5 +307,12 @@ if(ZLIB_BUILD_TESTING)
     enable_testing()
     add_subdirectory(test)
 endif(ZLIB_BUILD_TESTING)
+
+# ============================================================================
+# libFuzzer fuzz targets (optional)
+# ============================================================================
+if(ZLIB_BUILD_FUZZ)
+    add_subdirectory(fuzz)
+endif(ZLIB_BUILD_FUZZ)
 
 add_subdirectory(contrib)
