@@ -1,0 +1,24 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -22,6 +22,7 @@
+ option(ZLIB_BUILD_TESTING "Enable Zlib Examples as tests" ON)
+ option(ZLIB_BUILD_SHARED "Enable building zlib shared library" ON)
+ option(ZLIB_BUILD_STATIC "Enable building zlib static library" ON)
++option(ZLIB_BUILD_FUZZ "Enable libFuzzer fuzz targets (requires Clang)" OFF)
+ option(ZLIB_INSTALL "Enable installation of zlib" ON)
+ option(ZLIB_PREFIX "prefix for all types and library functions, see zconf.h.in"
+        OFF)
+@@ -304,6 +305,12 @@ endif(NOT ZLIB_CONF_WRITTEN)
+ if(ZLIB_BUILD_TESTING)
+     enable_testing()
+     add_subdirectory(test)
+ endif(ZLIB_BUILD_TESTING)
+ 
++# ============================================================================
++# libFuzzer fuzz targets (optional)
++# ============================================================================
++if(ZLIB_BUILD_FUZZ)
++    add_subdirectory(fuzz)
++endif(ZLIB_BUILD_FUZZ)
++
+ add_subdirectory(contrib)

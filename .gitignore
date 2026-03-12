@@ -1,0 +1,22 @@
+# upstream zlib (clone separately; we overlay fuzz/ and use cve_harnesses for old versions)
+zlib/
+zlib-1.2.11/
+zlib-1.2.12/
+
+# build artifacts
+cve_builds/
+ablation/logs/
+ablation/results.csv
+
+# corpora / crashes / coverage
+**/corpus/
+**/crashes/
+**/coverage/
+
+# debug symbols
+*.dSYM/
+
+# editor / OS noise
+.DS_Store
+.vscode/
+.cursor/

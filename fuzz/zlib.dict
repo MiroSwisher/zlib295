@@ -1,0 +1,44 @@
+# Fuzzer dictionary for zlib/gzip/deflate formats.
+# Magic bytes, common headers, and interesting values that help the fuzzer
+# construct valid-looking inputs faster.
+
+# zlib header bytes (CMF + FLG)
+zlib_l1="\x78\x01"
+zlib_def="\x78\x5e"
+zlib_default="\x78\x9c"
+zlib_best="\x78\xda"
+zlib_none="\x78\x20"
+
+# gzip magic number
+gzip_magic="\x1f\x8b"
+gzip_hdr3="\x1f\x8b\x08"
+gzip_hdr4="\x1f\x8b\x08\x00"
+
+# Deflate block type bits
+dfl_stored_last="\x01"
+dfl_stored="\x00"
+dfl_static="\x02"
+dfl_static_last="\x03"
+dfl_dynamic="\x04"
+dfl_dynamic_last="\x05"
+
+# Stored block header (LEN + NLEN)
+stored_empty="\x00\x00\xff\xff"
+stored_1byte="\x01\x00\xfe\xff"
+
+# Adler-32 patterns
+adler_empty="\x00\x00\x00\x01"
+adler_ff="\x00\x00\x00\xff"
+
+# CRC-32 patterns
+crc_zero="\x00\x00\x00\x00"
+crc_ones="\xff\xff\xff\xff"
+
+# Interesting length/distance values
+len_01="\x00\x01"
+len_7fff="\xff\x7f"
+len_ffff="\xff\xff"
+
+# End-of-block / sync markers
+eob_0="\x00"
+sync_marker="\x00\x00\xff\xff"

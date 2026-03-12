@@ -1,0 +1,52 @@
+Criteria 	Ratings 	Pts
+This criterion is linked to a Learning Outcome System Description
+Provide a high-level description of the bug-finding approach you will be evaluating. The system description should describe the general bug finding method (symbolic analysis, fuzzing, etc), the class of bugs you’re targeting, and the applications you’re targeting. This description is allowed reuse information from the project proposal.
+	
+15 pts Full Marks
+0 pts No Marks
+	
+15 pts
+This criterion is linked to a Learning Outcome Technical Approach
+Describe the testing approach you devised in more detail. This section should describe any routines you had to write to specialize the chosen bug-finding approach for your use-case. For example, in the case of fuzzing, this discussion should describe the test harness used and overview any specialized structural fuzzing, coverage, or error triggering procedures that were used.
+	
+20 pts Full Marks
+0 pts No Marks
+	
+20 pts
+This criterion is linked to a Learning Outcome System Setup Steps
+Provide a step-by-step guide on how to set up the testing system. This part of the report should describe any software and operating system dependencies, and provide descriptions for non-trivial setup steps. If you constructed any convenience / setup scripts to aid in system setup, you may include these scripts in the software reproducibility artifact package. If this part of the writeup is done well, someone should be able to recreate your experimental setup by following the described steps.
+	
+10 pts Full Marks
+0 pts No Marks
+	
+10 pts
+This criterion is linked to a Learning Outcome Evaluation Methodology [10 pts]
+Describe how you will evaluate your approach. The methodology should describe the following:
+
+
+Describe any metrics you will measure to evaluate the efficacy or your tool. Describe how you will detect that a bug has occurred. Describe the basic evaluation you will perform to validate that your approach works. This basic evaluation may involve hand-crafted test applications with known bugs. If you devised any optimizations, describe any ablation studies you will perform to quantify the impact of your optimizations. Note: an ablation study is a study where you isolate the effect of a particular optimization. Describe the production/complex application you will evaluate your approach on. This application should not be a small toy program.
+	
+15 pts Full Marks
+0 pts No Marks
+	
+15 pts
+This criterion is linked to a Learning Outcome Basic Evaluation
+Describe how your system performed on the basic, toy application, and report on the effect of different optimizations on your tool’s ability to find the artificially introduced bugs using quantitative metrics when possible. Provide some discussion interpreting the meaning of the results. Did any particular parts of your design prove to be highly successful / impactful, and how do you know this? What application characteristics substantially impact the performance of your system.
+	
+25 pts Full Marks
+0 pts No Marks
+	
+25 pts
+This criterion is linked to a Learning Outcome Evaluation on Production Application
+Describe how your system performed on the production application. Were you able to identify any interesting behaviors? What were they? If you weren’t able to find anything interesting, that’s okay – you will not be graded on your ability to find bugs in software in-the-wild. Regardless of the outcome, investigate how well your tool was able to exercise the program. Did it stall out without exercising most of the program, or did it actually manage to explore most program paths? If the tool did not perform well, why do you think it couldn’t explore the program behavior more effectively?
+	
+15 pts Full Marks
+0 pts No Marks
+	
+15 pts
+This criterion is linked to a Learning Outcome Artifact Package
+	
+20 pts Full Marks
+0 pts No Marks
+	
+20 pts

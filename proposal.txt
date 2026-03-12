@@ -1,0 +1,70 @@
+Majd Nasra | Miro Ohannes Swisher
+CS295 Final Project Proposal
+Security Analysis of zlib via Coverage-Guided Fuzzing
+1) Target Program
+Our project targets zlib (v1.3.x), a foundational compression library used globally in the Linux
+kernel, browsers, and version control systems.
+● Operation: zlib processes raw data streams or file formats (GZIP) using various internal
+strategies (like Fixed, Huffman, RLE).
+● Inputs: Our fuzzer will provide mutated byte arrays and random configuration
+parameters, such as compression levels (0-9) and window bits.
+● Outputs: The library outputs compressed or decompressed data. For our analysis, we
+will specifically monitor ASan crash logs and LLVM-COV coverage reports to evaluate
+the effectiveness of our testing.
+● Reason for Selection: Due to its ubiquity, zlib is a critical component of modern
+infrastructure. Its complex internal state machine makes it an ideal candidate for
+automated testing that can reach deep edge cases human reviewers might miss.
+2) Class of Bugs
+Our project focuses on finding three specific types of vulnerabilities:
+● Memory Safety: Buffer overflows and out-of-bounds reads/writes, identified via
+AddressSanitizer (ASan).
+● Logic Errors: Non-deterministic round-trips where decompression fails to return the
+original data, indicating a failure in the library's core algorithm.
+● Availability: Infinite loops or hangs (Denial of Service) identified by internal timeouts
+within the fuzzing engine.
+● Triage Plan: When a bug is found, we will use “asan_symbolize” to map the crash to a
+specific source line. We will then use a minimizer tool to reduce the input file to its
+smallest possible size and deduplicate crashes to ensure each report represents a
+unique vulnerability.
+3) Bug-Finding Strategy
+We will employ Structured Greybox Fuzzing using libFuzzer.
+● Strategy: Our fuzzer will track code coverage in real-time. It uses this feedback to
+"evolve" the input seeds, prioritizing inputs that reach new branches of the zlib state
+machine.
+● Test Harnesses: We have developed two primary C++ harnesses: “inflate_fuzzer”
+(testing decompression headers and streams) and “deflate_roundtrip_fuzzer” (verifying
+data integrity via compression-decompression cycles).
+● Troubleshooting: If coverage plateaus (the fuzzer gets "stuck"), we will introduce a
+custom dictionary containing GZIP and ZLIB header constants to help the fuzzer
+bypass initial format validation and reach deeper logic.
+4) Initial Work
+We have confirmed the feasibility of this project through the following steps:
+● Build Integration: We successfully modified the zlib “CMakeLists.txt” to support an
+instrumented build via a new “ZLIB_BUILD_FUZZ” option.
+● Environment Setup: We resolved technical hurdles regarding how the fuzzer links to
+the LLVM toolchain on macOS to ensure proper symbol resolution.
+● Metrics: Our proof-of-concept run achieved around 4500 coverage points and 15,000
+features in under an hour, proving our harness can deeply navigate the library's internal
+code paths.
+5) Fallback Plan: Historical Bug Rediscovery
+If the latest version of zlib proves to be resilient, we will demonstrate the effectiveness of our
+toolset by rolling back the library version to "re-discover" two significant past vulnerabilities:
+Bug
+Reference
+Version Description Replication
+CVE-2022-37
+434
+v1.2.12 Heap
+Overflow
+Run “inflate_fuzzer” to trigger a crash in
+“inflateGetHeader” via a malformed gzip
+"extra field."
+CVE-2018-25
+032
+v1.2.11 OOB Write Run “roundtrip_fuzzer” with the
+"Z_FIXED" strategy to trigger an
+out-of-bounds memory write.
+By successfully catching these known bugs, we will prove that our methodology is sound and
+capable of finding high-severity flaws in production software.
+6) Methods and Results: N/A (Next step)
+Note: Custom GitHub Repo URL with changes to be added here.
