@@ -6,16 +6,39 @@ CS295 final project: libFuzzer-based fuzzing of zlib, CVE rediscovery, and ablat
 
 ---
 
+## What we did
+
+**Goal:** Show that coverage-guided fuzzing (libFuzzer) on zlib is effective by (1) integrating harnesses into the library build, (2) rediscovering two known CVEs in older versions, and (3) running ablation studies to quantify the impact of dictionary and seed corpus.
+
+**What’s in this repo:**
+
+- **fuzz/** — Four libFuzzer harnesses for **latest zlib** (inflate, deflate round-trip, compress, uncompress), plus CMake integration, dictionary, and seed corpus generator. Copy into a vanilla zlib tree and build with `ZLIB_BUILD_FUZZ=ON`.
+- **cve_harnesses/** — Two **CVE-specific** harnesses and a build script that compile **vulnerable zlib v1.2.11 and v1.2.12** and run the fuzzers. Used to demonstrate that our methodology finds known bugs (CVE-2022-37434, CVE-2018-25032).
+- **ablation/** — Scripts to run controlled experiments (dictionary on/off, seeds on/off) and parse coverage/time-to-crash from logs. Includes a results summary and figures (e.g. `cov_60s_AB.png`, `time_to_crash_C.png`, `time_to_crash_D.png`).
+- **setup/** — Patch and script to add the fuzz targets to upstream zlib’s CMake without vendoring zlib.
+
+**What we ran and found:**
+
+- We built and fuzzed **latest zlib** (v1.3.2) with the four harnesses; no new bugs (expected for a mature library). We then checked out **zlib v1.2.12 and v1.2.11**, built them with our CVE harnesses, and **rediscovered CVE-2022-37434** (heap overflow in inflate with `inflateGetHeader` + large gzip extra field) and **CVE-2018-25032** (OOB in deflate with Z_FIXED). Both crash within seconds with the right seeds. We ran **ablation experiments** (dict vs no dict, seeds vs no seeds) and found that the **seed corpus is the decisive factor** for finding CVE-2018-25032; the dictionary has a more nuanced effect on coverage.
+
+**Where to read more:**
+
+- **CVE_REDISCOVERY.md** — CVE details, harness design, ASan snippets, and repro steps.
+- **ablation/RESULTS_SUMMARY.md** — Ablation tables and interpretation.
+- **proposal.txt** — Original project proposal and strategy.
+
+---
+
 ## Repo layout
 
-| Path | Description |
-|------|-------------|
-| **fuzz/** | libFuzzer harnesses and build logic for **upstream zlib** (copy into `zlib/fuzz/`) |
-| **setup/** | Patch and script to enable fuzz in a vanilla zlib CMake build |
-| **cve_harnesses/** | CVE-specific harnesses and build script for **zlib v1.2.11 / v1.2.12** |
-| **ablation/** | Ablation study scripts, logs, and results |
-| **CVE_REDISCOVERY.md** | CVE-2022-37434 and CVE-2018-25032 rediscovery report |
-| **ablation/RESULTS_SUMMARY.md** | Ablation study summary |
+| Path                            | Description                                                                        |
+| ------------------------------- | ---------------------------------------------------------------------------------- |
+| **fuzz/**                       | libFuzzer harnesses and build logic for **upstream zlib** (copy into `zlib/fuzz/`) |
+| **setup/**                      | Patch and script to enable fuzz in a vanilla zlib CMake build                      |
+| **cve_harnesses/**              | CVE-specific harnesses and build script for **zlib v1.2.11 / v1.2.12**             |
+| **ablation/**                   | Ablation study scripts, logs, and results                                          |
+| **CVE_REDISCOVERY.md**          | CVE-2022-37434 and CVE-2018-25032 rediscovery report                               |
+| **ablation/RESULTS_SUMMARY.md** | Ablation study summary                                                             |
 
 ---
 
